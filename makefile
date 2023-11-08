@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall
-SRCFILES = src/main.o src/generate_deal.o src/show.o
+SRCFILES = src/main.o src/cards.o src/display.o
 TARGET = bin/freecell
 
 all: $(TARGET)
