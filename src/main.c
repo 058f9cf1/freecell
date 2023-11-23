@@ -6,16 +6,20 @@
 
 #define DECK_SIZE 52
 #define CASCADES 8
+#define FREECELLS CASCADES
+#define FOUNDATIONS CASCADES + 1
+#define FREECELL_COUNT 4
+#define FOUNDATION_COUNT 4
 #define CASCADE_DEPTH 20
 
+#define UNSELECTED 0
+#define SELECTED 1
 
 int main()
 {
-	int board[CASCADES][CASCADE_DEPTH];
+	int board[CASCADES + 2][CASCADE_DEPTH];
 	int deck[DECK_SIZE];
-	int freecell[4];
-	int foundation[4];
-	int deal = INT_MAX - 5;
+	int deal = INT_MAX;
 
 	//Shuffle the cards
 	generate_deal(deck, DECK_SIZE, deal);
@@ -32,6 +36,24 @@ int main()
 			board[i % CASCADES][i / CASCADES] = -1;
 		}
 	}
+	//Fill out freecell and foundation columns
+	for(int i = 0; i < CASCADE_DEPTH; i++)
+	{
+		board[FREECELLS][i] = -1;
+		board[FOUNDATIONS][i] = -1;
+	}
+
+
+
+	//Print for debugging
+	for(int i = 0; i < CASCADE_DEPTH; i++)
+	{
+		for(int j = 0; j < CASCADES + 2; j++)
+		{
+			printf("%02d ", board[j][i]);
+		}
+		printf("\n");
+	}
 	
 	
 
@@ -42,6 +64,7 @@ int main()
 	int height = cascade_height(board[cursor], CASCADE_DEPTH);
 	int top;
 
+	//Set up initial board display
 	init_screen(deal);
 	for(int i = 0; i < CASCADES; i++)
 	{
@@ -49,11 +72,19 @@ int main()
 		{
 			if(board[i][j] != -1)
 			{
-				display_card(board[i][j], 0, i, j);
+				display_card(board[i][j], UNSELECTED, CASCADES, i, j);
 			}
 		}
 	}
-	display_cursor(cursor, height + 1, '*');
+	for(int i = 0; i < FREECELL_COUNT; i++)
+	{
+		display_card(board[FREECELLS][i], UNSELECTED, CASCADES, FREECELLS, i);
+	}
+	for(int i = 0; i < FOUNDATION_COUNT; i++)
+	{
+		display_card(board[FOUNDATIONS][i], UNSELECTED, CASCADES, FOUNDATIONS, i);
+	}
+	display_cursor(CASCADES, cursor, height + 1, '*');
 	update_screen();
 	
 	
@@ -65,36 +96,95 @@ int main()
 		}
 		else if(ch >= 49 && ch <= 56)//Number key
 		{
-			display_cursor(cursor, height + 1, ' ');
+			display_cursor(CASCADES, cursor, height + 1, ' ');
 			cursor = ch - 49;
 			height = cascade_height(board[cursor], CASCADE_DEPTH);
-			display_cursor(cursor, height + 1, '*');
+			display_cursor(CASCADES, cursor, height + 1, '*');
+			update_screen();
+		}
+		else if(ch == 97)
+		{
+			display_cursor(CASCADES, cursor, height + 1, ' ');
+			cursor = CASCADES;
+			display_cursor(CASCADES, cursor, 0, '*');
+			update_screen();
+		}
+		else if(ch == 115)
+		{
+			display_cursor(CASCADES, cursor, height + 1, ' ');
+			cursor = CASCADES + 1;
+			display_cursor(CASCADES, cursor, 0, '*');
+			update_screen();
+		}
+		else if(ch == 100)
+		{
+			display_cursor(CASCADES, cursor, height + 1, ' ');
+			cursor = CASCADES + 2;
+			display_cursor(CASCADES, cursor, 0, '*');
+			update_screen();
+		}
+		else if(ch == 102)
+		{
+			display_cursor(CASCADES, cursor, height + 1, ' ');
+			cursor = CASCADES + 3;
+			display_cursor(CASCADES, cursor, 0, '*');
 			update_screen();
 		}
 		else if(ch == 10)//Enter
 		{
 			if(selected == -1)
 			{
-				top = stack_top(board[cursor], CASCADE_DEPTH);
-				for(int i = top; i < height; i++)
+				if(cursor >= 0 && cursor < CASCADES)
 				{
-					display_card(board[cursor][i], 1, cursor, i);
+					top = stack_top(board[cursor], CASCADE_DEPTH);
+					if(top != 0)
+					{
+						for(int i = top; i < height; i++)
+						{
+							display_card(board[cursor][i], SELECTED, CASCADES, cursor, i);
+						}
+						selected = cursor;
+					}
 				}
-				selected = cursor;
+				else if(board[FREECELLS][cursor - CASCADES] != -1)
+				{
+					display_card(board[FREECELLS][cursor - CASCADES], SELECTED, CASCADES, FREECELLS, cursor - CASCADES);
+					selected = cursor;
+				}
 			}
 			else if(selected == cursor)
 			{
-				top = stack_top(board[cursor], CASCADE_DEPTH);
-				for(int i = top; i < height; i++)
+				if(cursor >= 0 && cursor < CASCADES)
 				{
-					display_card(board[cursor][i], 0, cursor, i);
+					top = stack_top(board[cursor], CASCADE_DEPTH);
+					for(int i = top; i < height; i++)
+					{
+						display_card(board[cursor][i], UNSELECTED, CASCADES, cursor, i);
+					}
+				}
+				else
+				{
+					display_card(board[FREECELLS][cursor - CASCADES], UNSELECTED, CASCADES, FREECELLS, cursor - CASCADES);
 				}
 				selected = -1;
+			}
+			else//Two different cells selected
+			{
+				if(cursor >= CASCADES)//Move to freecell
+				{
+					if(board[FREECELLS][cursor - CASCADES] == -1)
+					{
+						display_card(board[selected][height - 1], UNSELECTED, CASCADES, FREECELLS, cursor - CASCADES);
+						display_card(-1, UNSELECTED, CASCADES, selected, height - 1);
+						board[FREECELLS][cursor - CASCADES] = board[selected][height - 1];
+						board[selected][height - 1] = -1;
+						selected = -1;
+					}
+				}
 			}
 			update_screen();
 		}
 	}
 	exit_game();
-
 	return 0;
 }

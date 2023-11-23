@@ -64,6 +64,7 @@ void init_screen(int deal)
 	table = newwin(rows - 1, cols, 0, 0);
 	wbkgd(table, COLOR_PAIR(BACKGROUND));
 	box(table, 0, 0);
+	mvwprintw(table, 4, cols/2 - 6, "F R E E C E L L");
 	wrefresh(table);
 
 	//Info bar
@@ -92,32 +93,70 @@ void init_screen(int deal)
 }
 
 
-void display_card(int card, int selected, int x, int y)
+void display_card(int card, int selected, int cascades, int x, int y)
 {
+	char rank;
+	char suit;
+
+	//Initialise card
+	if(card == -1 && x > cascades - 1)
+	{
+		rank = ' ';
+		suit = ' ';
+		wattron(table, COLOR_PAIR(5 + selected));
+	}
+	else if(card == -1)
+	{
+		rank = ' ';
+		suit = ' ';
+		wattron(table, COLOR_PAIR(BACKGROUND));
+	}
+	else
+	{
+		rank = ranks[card / 4];
+		suit = suits[card % 4];
+	}
+
+
+	//Set card colour
 	if(selected == 0)
 	{
-		if(card % 4 == 0 || card % 4 == 3)
+		if(suit == 'C' || suit == 'S')
 		{
 			wattron(table, COLOR_PAIR(UNSELECTED_BLACK_CARD));
 		}
-		else if(card % 4 == 1 || card % 4 == 2)
+		else if(suit == 'D' || suit == 'H')
 		{
 			wattron(table, COLOR_PAIR(UNSELECTED_RED_CARD));
 		}
 	}
 	else if(selected >= 1)
 	{
-		if(card % 4 == 0 || card % 4 == 3)
+		if(suit == 'C' || suit == 'S')
 		{
 			wattron(table, COLOR_PAIR(SELECTED_BLACK_CARD));
 		}
-		else if(card % 4 == 1 || card % 4 == 2)
+		else if(suit == 'D' || suit == 'H')
 		{
 			wattron(table, COLOR_PAIR(SELECTED_RED_CARD));
 		}
 	}
 
-	mvwprintw(table, y + 3, (x * 3 + 1) + cols / 2 - 11, "%c%c", ranks[card / 4], suits[card % 4]);
+	//Display card at position on the screen
+	if(x < cascades)	//Board
+	{
+		mvwprintw(table, y + 10, (x * 3 + 1) + cols / 2 - 11, "%c%c", rank, suit);
+	}
+	else if(x == cascades)	//Freecells
+	{
+		x -= cascades;
+		mvwprintw(table, y + 10, (x * 3 + 1) + cols / 2 - 22, "%c%c", rank, suit);
+	}
+	else if(x == cascades + 1)	//Foundations
+	{
+		x -= cascades - 1;
+		mvwprintw(table, y + 10, (x * 3 + 1) + cols / 2 + 15, "%c%c", rank, suit);
+	}
 	wattroff(table, COLOR_PAIR(UNSELECTED_BLACK_CARD));
 	wattroff(table, COLOR_PAIR(UNSELECTED_RED_CARD));
 	wattroff(table, COLOR_PAIR(SELECTED_BLACK_CARD));
@@ -125,9 +164,17 @@ void display_card(int card, int selected, int x, int y)
 }
 
 
-void display_cursor(int x, int y, char c)
+void display_cursor(int cascades, int x, int y, char c)
 {
-	mvwprintw(table, y + 3, (x * 3 + 1) + cols / 2 - 11, "%c", c);
+	if(x < cascades)
+	{
+		mvwprintw(table, y + 10, (x * 3 + 1) + cols / 2 - 11, "%c", c);
+	}
+	else if(x >= cascades)
+	{
+		x -= cascades;
+		mvwprintw(table, x + 10, cols / 2 - 18, "%c", c);
+	}
 }
 
 
