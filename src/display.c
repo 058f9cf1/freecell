@@ -46,7 +46,9 @@ void init_screen(int deal)
 	use_default_colors();
 	if(can_change_color() && COLORS >= 16)
 	{
+		init_color(COLOR_WHITE, 800, 800, 800);
 		init_color(COLOR_BLACK, 0, 0, 0);
+		init_color(COLOR_RED, 1000, 0, 0);
 		init_color(COLOR_GREEN, 0, 200, 0);
 	}
 	init_pair(BACKGROUND, COLOR_WHITE, COLOR_GREEN);
@@ -98,7 +100,7 @@ void display_card(int card, int selected, int cascades, int x, int y)
 	char rank;
 	char suit;
 
-	//Initialise card
+	//Set card value and colour
 	if(card == -1 && x > cascades - 1)
 	{
 		rank = ' ';
@@ -115,44 +117,42 @@ void display_card(int card, int selected, int cascades, int x, int y)
 	{
 		rank = ranks[card / 4];
 		suit = suits[card % 4];
-	}
 
-
-	//Set card colour
-	if(selected == 0)
-	{
-		if(suit == 'C' || suit == 'S')
+		if(selected == 0)
 		{
-			wattron(table, COLOR_PAIR(UNSELECTED_BLACK_CARD));
+			if(suit == 'C' || suit == 'S')
+			{
+				wattron(table, COLOR_PAIR(UNSELECTED_BLACK_CARD));
+			}
+			else if(suit == 'D' || suit == 'H')
+			{
+				wattron(table, COLOR_PAIR(UNSELECTED_RED_CARD));
+			}
 		}
-		else if(suit == 'D' || suit == 'H')
+		else if(selected >= 1)
 		{
-			wattron(table, COLOR_PAIR(UNSELECTED_RED_CARD));
-		}
-	}
-	else if(selected >= 1)
-	{
-		if(suit == 'C' || suit == 'S')
-		{
-			wattron(table, COLOR_PAIR(SELECTED_BLACK_CARD));
-		}
-		else if(suit == 'D' || suit == 'H')
-		{
-			wattron(table, COLOR_PAIR(SELECTED_RED_CARD));
+			if(suit == 'C' || suit == 'S')
+			{
+				wattron(table, COLOR_PAIR(SELECTED_BLACK_CARD));
+			}
+			else if(suit == 'D' || suit == 'H')
+			{
+				wattron(table, COLOR_PAIR(SELECTED_RED_CARD));
+			}
 		}
 	}
 
 	//Display card at position on the screen
-	if(x < cascades)	//Board
+	if(x < cascades)//Board
 	{
 		mvwprintw(table, y + 10, (x * 3 + 1) + cols / 2 - 11, "%c%c", rank, suit);
 	}
-	else if(x == cascades)	//Freecells
+	else if(x == cascades)//Freecells
 	{
 		x -= cascades;
 		mvwprintw(table, y + 10, (x * 3 + 1) + cols / 2 - 22, "%c%c", rank, suit);
 	}
-	else if(x == cascades + 1)	//Foundations
+	else if(x == cascades + 1)//Foundations
 	{
 		x -= cascades - 1;
 		mvwprintw(table, y + 10, (x * 3 + 1) + cols / 2 + 15, "%c%c", rank, suit);

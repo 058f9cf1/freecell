@@ -19,7 +19,7 @@ int main()
 {
 	int board[CASCADES + 2][CASCADE_DEPTH];
 	int deck[DECK_SIZE];
-	int deal = INT_MAX;
+	int deal = INT_MAX - 5;
 
 	//Shuffle the cards
 	generate_deal(deck, DECK_SIZE, deal);
@@ -63,6 +63,7 @@ int main()
 	int selected = -1;
 	int height = cascade_height(board[cursor], CASCADE_DEPTH);
 	int top;
+	int total;
 
 	//Set up initial board display
 	init_screen(deal);
@@ -87,7 +88,7 @@ int main()
 	display_cursor(CASCADES, cursor, height + 1, '*');
 	update_screen();
 	
-	
+	//Main game loop	
 	while((ch = getch()) != 'q')
 	{
 		if(ch == KEY_F(1))//F1
@@ -102,28 +103,28 @@ int main()
 			display_cursor(CASCADES, cursor, height + 1, '*');
 			update_screen();
 		}
-		else if(ch == 97)
+		else if(ch == 97)//a
 		{
 			display_cursor(CASCADES, cursor, height + 1, ' ');
 			cursor = CASCADES;
 			display_cursor(CASCADES, cursor, 0, '*');
 			update_screen();
 		}
-		else if(ch == 115)
+		else if(ch == 115)//s
 		{
 			display_cursor(CASCADES, cursor, height + 1, ' ');
 			cursor = CASCADES + 1;
 			display_cursor(CASCADES, cursor, 0, '*');
 			update_screen();
 		}
-		else if(ch == 100)
+		else if(ch == 100)//d
 		{
 			display_cursor(CASCADES, cursor, height + 1, ' ');
 			cursor = CASCADES + 2;
 			display_cursor(CASCADES, cursor, 0, '*');
 			update_screen();
 		}
-		else if(ch == 102)
+		else if(ch == 102)//f
 		{
 			display_cursor(CASCADES, cursor, height + 1, ' ');
 			cursor = CASCADES + 3;
@@ -172,19 +173,80 @@ int main()
 			{
 				if(cursor >= CASCADES)//Move to freecell
 				{
-					if(board[FREECELLS][cursor - CASCADES] == -1)
+					if(board[FREECELLS][cursor - CASCADES] == -1)//If freecell empty
 					{
-						display_card(board[selected][height - 1], UNSELECTED, CASCADES, FREECELLS, cursor - CASCADES);
-						display_card(-1, UNSELECTED, CASCADES, selected, height - 1);
-						board[FREECELLS][cursor - CASCADES] = board[selected][height - 1];
-						board[selected][height - 1] = -1;
+						if(selected < CASCADES)
+						{
+							top = stack_top(board[selected], CASCADE_DEPTH);
+							if(top != 0)
+							{
+								for(int i = top; i < height; i++)
+								{
+									display_card(board[selected][i], UNSELECTED, CASCADES, selected, i);
+								}
+							}
+
+							display_card(board[selected][height - 1], UNSELECTED, CASCADES, FREECELLS, cursor - CASCADES);
+							display_card(-1, UNSELECTED, CASCADES, selected, height - 1);
+
+							board[FREECELLS][cursor - CASCADES] = board[selected][height - 1];
+							board[selected][height - 1] = -1;
+						}
+						else
+						{
+							display_card(board[FREECELLS][selected - CASCADES], UNSELECTED, CASCADES, FREECELLS, cursor - CASCADES);
+							display_card(-1, UNSELECTED, CASCADES, FREECELLS, selected - CASCADES);
+							board[FREECELLS][cursor - CASCADES] = board[FREECELLS][selected - CASCADES];
+							board[FREECELLS][selected - CASCADES] = -1;
+						}
 						selected = -1;
 					}
 				}
 			}
+			
+			update_screen();
+		}
+		else if(ch == 104 && selected == -1)//h
+		{
+			int card;
+			if(cursor < CASCADES)
+			{
+				card = board[cursor][height - 1];
+			}
+			else
+			{
+				card = board[FREECELLS][cursor - CASCADES];
+			}
+			//Is the move to the foundations valid?
+			if(card != -1 && card / 4 == board[FOUNDATIONS][card % 4] + 1)
+			{
+				display_card(card, UNSELECTED, CASCADES, FOUNDATIONS, card % 4);
+				board[FOUNDATIONS][card % 4]++;
+				if(cursor < CASCADES)
+				{
+					display_card(-1, UNSELECTED, CASCADES, cursor, height - 1);
+					board[cursor][height - 1] = -1;
+					display_cursor(CASCADES, cursor, height + 1, ' ');
+					display_cursor(CASCADES, cursor, height, '*');
+					height--;
+				}
+				else
+				{
+					display_card(-1, UNSELECTED, CASCADES, FREECELLS, cursor - CASCADES);
+					board[FREECELLS][cursor - CASCADES] = -1;
+				}
+				total++;
+				display_card(total, UNSELECTED, CASCADES, FOUNDATIONS, 5);
+				if(total == DECK_SIZE)
+				{
+					printf("WIN!\n");
+				}
+			}
+
 			update_screen();
 		}
 	}
 	exit_game();
+
 	return 0;
 }
