@@ -32,7 +32,7 @@ int int_len(int n)
 }
 
 
-void init_screen(int deal)
+void init_screen(int deal, int invert)
 {
 	//Initialise curses
 	initscr();
@@ -46,16 +46,26 @@ void init_screen(int deal)
 	use_default_colors();
 	if(can_change_color() && COLORS >= 16)
 	{
-		init_color(COLOR_WHITE, 800, 800, 800);
 		init_color(COLOR_BLACK, 0, 0, 0);
-		init_color(COLOR_RED, 1000, 0, 0);
+		init_color(COLOR_WHITE, 1000, 1000, 1000);
+		init_color(COLOR_RED, 700, 0, 0);
 		init_color(COLOR_GREEN, 0, 200, 0);
 	}
 	init_pair(BACKGROUND, COLOR_WHITE, COLOR_GREEN);
 	init_pair(INFO, COLOR_WHITE, COLOR_BLACK);
 	init_pair(HELP, COLOR_RED, COLOR_WHITE);
-	init_pair(UNSELECTED_BLACK_CARD, COLOR_BLACK, COLOR_WHITE);
-	init_pair(UNSELECTED_RED_CARD, COLOR_RED, COLOR_WHITE);
+
+	if(invert)
+	{
+		init_pair(UNSELECTED_BLACK_CARD, COLOR_WHITE, COLOR_BLACK);
+		init_pair(UNSELECTED_RED_CARD, COLOR_WHITE, COLOR_RED);
+	}
+	else
+	{
+		init_pair(UNSELECTED_BLACK_CARD, COLOR_BLACK, COLOR_WHITE);
+		init_pair(UNSELECTED_RED_CARD, COLOR_RED, COLOR_WHITE);
+	}
+
 	init_pair(SELECTED_BLACK_CARD, COLOR_BLACK, COLOR_CYAN);
 	init_pair(SELECTED_RED_CARD, COLOR_RED, COLOR_CYAN);
 
@@ -101,11 +111,11 @@ void display_card(int card, int selected, int cascades, int x, int y)
 	char suit;
 
 	//Set card value and colour
-	if(card == -1 && x > cascades - 1)
+	if(card == -1 && x >= cascades)
 	{
 		rank = ' ';
 		suit = ' ';
-		wattron(table, COLOR_PAIR(5 + selected));
+		wattron(table, COLOR_PAIR(UNSELECTED_BLACK_CARD));
 	}
 	else if(card == -1)
 	{
@@ -141,6 +151,7 @@ void display_card(int card, int selected, int cascades, int x, int y)
 			}
 		}
 	}
+	wattron(table, A_BOLD);
 
 	//Display card at position on the screen
 	if(x < cascades)//Board
@@ -157,6 +168,7 @@ void display_card(int card, int selected, int cascades, int x, int y)
 		x -= cascades - 1;
 		mvwprintw(table, y + 10, (x * 3 + 1) + cols / 2 + 15, "%c%c", rank, suit);
 	}
+	wattroff(table, A_BOLD);
 	wattroff(table, COLOR_PAIR(UNSELECTED_BLACK_CARD));
 	wattroff(table, COLOR_PAIR(UNSELECTED_RED_CARD));
 	wattroff(table, COLOR_PAIR(SELECTED_BLACK_CARD));

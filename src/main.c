@@ -63,10 +63,10 @@ int main()
 	int selected = -1;
 	int height = cascade_height(board[cursor], CASCADE_DEPTH);
 	int top;
-	int total;
+	int total = 0;
 
 	//Set up initial board display
-	init_screen(deal);
+	init_screen(deal, 1);
 	for(int i = 0; i < CASCADES; i++)
 	{
 		for(int j = 0; j < CASCADE_DEPTH; j++)
