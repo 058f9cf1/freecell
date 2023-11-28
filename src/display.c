@@ -18,6 +18,7 @@ char const ranks[13] = {'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', '
 int rows, cols;
 
 
+//Determine the order of magnitude of an integer
 int int_len(int n)
 {
 	int len = 1;
