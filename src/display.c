@@ -41,6 +41,7 @@ void init_screen(int deal, int invert)
 	noecho();
 	keypad(stdscr, TRUE);
 	getmaxyx(stdscr, rows, cols);
+	refresh();
 
 	//Initialise colours
 	start_color();
@@ -50,12 +51,15 @@ void init_screen(int deal, int invert)
 		init_color(COLOR_BLACK, 0, 0, 0);
 		init_color(COLOR_WHITE, 1000, 1000, 1000);
 		init_color(COLOR_RED, 700, 0, 0);
-		init_color(COLOR_GREEN, 0, 200, 0);
+		init_color(COLOR_GREEN, 0, 300, 0);
 	}
+
+	//Window colours
 	init_pair(BACKGROUND, COLOR_WHITE, COLOR_GREEN);
 	init_pair(INFO, COLOR_WHITE, COLOR_BLACK);
 	init_pair(HELP, COLOR_RED, COLOR_WHITE);
 
+	//Card colours
 	if(invert)
 	{
 		init_pair(UNSELECTED_BLACK_CARD, COLOR_WHITE, COLOR_BLACK);
@@ -70,14 +74,11 @@ void init_screen(int deal, int invert)
 	init_pair(SELECTED_BLACK_CARD, COLOR_BLACK, COLOR_CYAN);
 	init_pair(SELECTED_RED_CARD, COLOR_RED, COLOR_CYAN);
 
-	//Refresh stdscr
-	refresh();
-
 	//Table
 	table = newwin(rows - 1, cols, 0, 0);
 	wbkgd(table, COLOR_PAIR(BACKGROUND));
 	box(table, 0, 0);
-	mvwprintw(table, 4, cols/2 - 6, "F R E E C E L L");
+	mvwprintw(table, 4, cols/2 - 7, "♠F R E E C E L L");
 	wrefresh(table);
 
 	//Info bar
@@ -92,7 +93,6 @@ void init_screen(int deal, int invert)
 	//Help box
 	int const HELP_HEIGHT = 10;
 	int const HELP_WIDTH = 40;
-
 	help_box = newwin(HELP_HEIGHT, HELP_WIDTH, (rows - HELP_HEIGHT) / 2, (cols - HELP_WIDTH) / 2);
 	wbkgd(help_box, COLOR_PAIR(HELP));
 	box(help_box, 0, 0);
@@ -157,7 +157,7 @@ void display_card(int card, int selected, int cascades, int x, int y)
 	//Display card at position on the screen
 	if(x < cascades)//Board
 	{
-		mvwprintw(table, y + 10, (x * 3 + 1) + cols / 2 - 11, "%c%c", rank, suit);
+		mvwprintw(table, y + 10, (x * 3 + 1) + cols / 2 - 12, "%c%c", rank, suit);
 	}
 	else if(x == cascades)//Freecells
 	{
@@ -167,7 +167,7 @@ void display_card(int card, int selected, int cascades, int x, int y)
 	else if(x == cascades + 1)//Foundations
 	{
 		x -= cascades - 1;
-		mvwprintw(table, y + 10, (x * 3 + 1) + cols / 2 + 15, "%c%c", rank, suit);
+		mvwprintw(table, y + 10, (x * 3 + 1) + cols / 2 + 13, "%c%c", rank, suit);
 	}
 	wattroff(table, A_BOLD);
 	wattroff(table, COLOR_PAIR(UNSELECTED_BLACK_CARD));
@@ -179,11 +179,11 @@ void display_card(int card, int selected, int cascades, int x, int y)
 
 void display_cursor(int cascades, int x, int y, char c)
 {
-	if(x < cascades)
+	if(x < cascades)//Board
 	{
-		mvwprintw(table, y + 10, (x * 3 + 1) + cols / 2 - 11, "%c", c);
+		mvwprintw(table, y + 10, (x * 3 + 1) + cols / 2 - 12, "%c", c);
 	}
-	else if(x >= cascades)
+	else if(x >= cascades)//Freecells
 	{
 		x -= cascades;
 		mvwprintw(table, x + 10, cols / 2 - 18, "%c", c);
