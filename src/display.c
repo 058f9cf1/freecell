@@ -78,7 +78,7 @@ void init_screen(int deal, int invert)
 	table = newwin(rows - 1, cols, 0, 0);
 	wbkgd(table, COLOR_PAIR(BACKGROUND));
 	box(table, 0, 0);
-	mvwprintw(table, 4, cols/2 - 7, "♠F R E E C E L L");
+	mvwprintw(table, 4, cols/2 - 7, "F R E E C E L L");
 	wrefresh(table);
 
 	//Info bar

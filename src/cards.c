@@ -32,6 +32,7 @@ void generate_deal(int deck[], int size, int deal)
 }
 
 
+//Determine the number of cards in a cascade
 int cascade_height(int cascade[], int depth)
 {
 	int height = 0;
@@ -43,6 +44,7 @@ int cascade_height(int cascade[], int depth)
 }
 
 
+//Determine if card1 can be placed onto card2
 int valid_pair(int card1, int card2)
 {
 	int opposite_suits;
@@ -52,7 +54,7 @@ int valid_pair(int card1, int card2)
 	{
 		opposite_suits = card2 % 4 == 1 || card2 % 4 == 2;
 	}
-	else
+	else//Red card
 	{
 		opposite_suits = card2 % 4 == 0 || card2 % 4 == 3;
 	}
@@ -60,6 +62,7 @@ int valid_pair(int card1, int card2)
 }
 
 
+//Get the index of the card at the top of a valid stack
 int stack_top(int cascade[], int depth)
 {
 	int height = cascade_height(cascade, depth);
