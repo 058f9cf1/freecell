@@ -78,7 +78,7 @@ int main()
 	int help_visible = 0;
 	int cursor = 0;
 	int selected = -1;
-	int height = cascade_height(board[cursor], CASCADE_DEPTH);
+	int height = DECK_SIZE / CASCADE_COUNT + (cursor < DECK_SIZE % CASCADE_COUNT);
 	int top;
 	int free_spaces = FREECELL_COUNT;
 	int total = 0;
@@ -205,12 +205,9 @@ int main()
 					{
 						//Unshow selection on cascade
 						top = stack_top(board[selected], CASCADE_DEPTH);
-						if(top != 0)
+						for(int i = top; i < height; i++)
 						{
-							for(int i = top; i < height; i++)
-							{
-								display_card(board[selected][i], UNSELECTED, CASCADE_COUNT, selected, i);
-							}
+							display_card(board[selected][i], UNSELECTED, CASCADE_COUNT, selected, i);
 						}
 
 						//Move card to freecell
@@ -220,6 +217,12 @@ int main()
 						//Remove card from board
 						display_card(-1, UNSELECTED, CASCADE_COUNT, selected, height - 1);
 						board[selected][height - 1] = -1;
+
+						//Don't subtract from free_spaces if an empty column is created
+						if(board[selected][0] != -1)
+						{
+							free_spaces--;
+						}
 					}
 
 					//From freecell to freecell
@@ -247,8 +250,29 @@ int main()
 					}
 
 					//From freecell to board
-					else
+					else if(valid_pair(board[FREECELLS][selected - CASCADE_COUNT], board[cursor][height - 1]) || height == 0)
 					{
+						//Move cursor up a space
+						height++;
+						display_cursor(CASCADE_COUNT, cursor, height, ' ');
+						display_cursor(CASCADE_COUNT, cursor, height + 1, '*');
+
+						//Move card to board
+						display_card(board[FREECELLS][selected - CASCADE_COUNT], UNSELECTED, CASCADE_COUNT, cursor, height - 1);
+						board[cursor][height - 1] = board[FREECELLS][selected - CASCADE_COUNT];
+
+						//Remove card from freecell
+						display_card(-1, UNSELECTED, CASCADE_COUNT, FREECELLS, selected - CASCADE_COUNT);
+						board[FREECELLS][selected - CASCADE_COUNT] = -1;
+
+						//Unselect previous selection
+						selected = -1;
+
+						//Don't subtract from free_spaces if moving to empty column
+						if(board[cursor][1] != -1)
+						{
+							free_spaces++;
+						}
 					}
 				}
 			}
@@ -298,6 +322,8 @@ int main()
 					//Remove card from freecell
 					display_card(-1, UNSELECTED, CASCADE_COUNT, FREECELLS, cursor - CASCADE_COUNT);
 					board[FREECELLS][cursor - CASCADE_COUNT] = -1;
+
+					free_spaces++;
 				}
 
 				//Increment the total number of cards in the foundations

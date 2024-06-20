@@ -78,7 +78,7 @@ void init_screen(int deal, int invert)
 	table = newwin(rows - 1, cols, 0, 0);
 	wbkgd(table, COLOR_PAIR(BACKGROUND));
 	box(table, 0, 0);
-	mvwprintw(table, 4, cols/2 - 7, "F R E E C E L L");
+	mvwprintw(table, 4, cols / 2 - 7, "F R E E C E L L");
 	wrefresh(table);
 
 	//Info bar
@@ -108,20 +108,16 @@ void init_screen(int deal, int invert)
 
 void display_card(int card, int selected, int cascades, int x, int y)
 {
-	char rank;
-	char suit;
+	char rank = ' ';
+	char suit = ' ';
 
 	//Set card value and colour
 	if(card == -1 && x >= cascades)
 	{
-		rank = ' ';
-		suit = ' ';
 		wattron(table, COLOR_PAIR(UNSELECTED_BLACK_CARD));
 	}
 	else if(card == -1)
 	{
-		rank = ' ';
-		suit = ' ';
 		wattron(table, COLOR_PAIR(BACKGROUND));
 	}
 	else
