@@ -47,11 +47,6 @@ int cascade_height(int cascade[], int depth)
 //Determine if card1 can be placed onto card2
 int valid_pair(int card1, int card2)
 {
-	if(card2 == -1)
-	{
-		return 1;
-	}
-
 	int opposite_suits;
 	int same_rank = card1 / 4 + 1 == card2 / 4;
 

@@ -272,26 +272,63 @@ int main()
 					{
 						//Try to find a matching pair in the stack
 						top = stack_top(board[selected], CASCADE_DEPTH);
+						int selected_top = top;
 						int selected_height = cascade_height(board[selected], CASCADE_DEPTH);
-						while(top != selected_height && !valid_pair(board[selected][top], board[cursor][height - 1]))
+						if(height != 0)
 						{
-							top++;
+							while((top != selected_height && !valid_pair(board[selected][top], board[cursor][height - 1])))
+							{
+								top++;
+							}
 						}
 
 						//Determine if a match was found
 						if(top != selected_height)
 						{
 							//Determine if a stack can be moved legally
-							if(selected_height - top <= free_spaces + 1)
+							if(selected_height - top <= free_spaces + 1 - (height == 0))
 							{
-								//TODO
-								display_card(board[selected][top], UNSELECTED, CASCADE_COUNT, FREECELLS, 5);
+								//Unselect cards in a stack that aren't being moved
+								for(int i = selected_top; i < top; i++)
+								{
+									display_card(board[selected][i], UNSELECTED, CASCADE_COUNT, selected, i);
+								}
+								for(int i = top; i < selected_height; i++)
+								{
+									//Move cards to selected cascade
+									display_card(board[selected][i], UNSELECTED, CASCADE_COUNT, cursor, height + i - top);
+									board[cursor][height + i - top] = board[selected][i];
+
+									//Remove cards from old cascade
+									display_card(-1, UNSELECTED, CASCADE_COUNT, selected, i);
+									board[selected][i] = -1;
+								}
+
+								//Subtract from free_spaces if moving to empty column
+								if(height == 0)
+								{
+									free_spaces--;
+								}
+
+								//Add to free_spaces if the column becomes empty
+								if(top == 0)
+								{
+									free_spaces++;
+								}
+
+								//Move cursor to correct space
+								height = height + selected_height - top;
+								display_cursor(CASCADE_COUNT, cursor, height, ' ');
+								display_cursor(CASCADE_COUNT, cursor, height + 1, '*');
+
+								//Unselect previous selection
+								selected = -1;
 							}
 						}
 					}
 
 					//From freecell to board
-					else if(valid_pair(board[FREECELLS][selected - CASCADE_COUNT], board[cursor][height - 1]))
+					else if(valid_pair(board[FREECELLS][selected - CASCADE_COUNT], board[cursor][height - 1]) || height == 0)
 					{
 						//Move cursor up a space
 						height++;
