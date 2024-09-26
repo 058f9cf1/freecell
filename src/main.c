@@ -1,14 +1,15 @@
-#include <stdio.h>
-#include <limits.h>
 #include <ncurses.h>
 #include "cards.h"
 #include "display.h"
 
+
 #define DECK_SIZE 52
 #define CASCADE_COUNT 8
 #define FREECELL_COUNT 4
-#define FOUNDATION_COUNT DECK_SIZE / 13
+#define FOUNDATION_COUNT (DECK_SIZE - 1) / 52 * 4 + 4 
 #define CASCADE_DEPTH 20
+
+
 #define FREECELLS CASCADE_COUNT
 #define FOUNDATIONS CASCADE_COUNT + 1
 
@@ -18,7 +19,7 @@
 //Initialise board, deck and the deal number
 int board[CASCADE_COUNT + 2][CASCADE_DEPTH];
 int deck[DECK_SIZE];
-int deal = INT_MAX - 5;
+int deal = 2147483642;
 
 
 int main()
@@ -99,10 +100,30 @@ int main()
 		}
 
 		//Move cursor to the cascade from the pressed key
-		else if(ch >= 49 && ch <= 56)//Number key
+		else if(ch >= 49 && ch <= 57 && ch - 49 < CASCADE_COUNT)//Number key
 		{
 			display_cursor(CASCADE_COUNT, cursor, height + 1, ' ');
 			cursor = ch - 49;
+			height = cascade_height(board[cursor], CASCADE_DEPTH);
+			display_cursor(CASCADE_COUNT, cursor, height + 1, '*');
+			update_screen();
+		}
+		else if(ch == KEY_LEFT)
+		{
+			display_cursor(CASCADE_COUNT, cursor, height + 1, ' ');
+			cursor = (cursor - 1) % CASCADE_COUNT;
+			if(cursor == -1)
+			{
+				cursor = CASCADE_COUNT - 1;
+			}
+			height = cascade_height(board[cursor], CASCADE_DEPTH);
+			display_cursor(CASCADE_COUNT, cursor, height + 1, '*');
+			update_screen();
+		}
+		else if(ch == KEY_RIGHT)
+		{
+			display_cursor(CASCADE_COUNT, cursor, height + 1, ' ');
+			cursor = (cursor + 1) % CASCADE_COUNT;
 			height = cascade_height(board[cursor], CASCADE_DEPTH);
 			display_cursor(CASCADE_COUNT, cursor, height + 1, '*');
 			update_screen();
@@ -158,6 +179,8 @@ int main()
 						display_card(board[cursor][i], SELECTED, CASCADE_COUNT, cursor, i);
 					}
 
+					//Save the selected cascade
+					selected = cursor;
 				}
 
 				//If a non-empty freecell is selected
@@ -165,10 +188,10 @@ int main()
 				{
 					//Show what card is selected
 					display_card(board[FREECELLS][cursor - CASCADE_COUNT], SELECTED, CASCADE_COUNT, FREECELLS, cursor - CASCADE_COUNT);
-				}
 
-				//Save the selected cascade
-				selected = cursor;
+					//Save the selected cascade
+					selected = cursor;
+				}
 			}
 
 			//If the selected card is selected again
@@ -219,7 +242,7 @@ int main()
 						board[selected][height - 1] = -1;
 
 						//Don't subtract from free_spaces if an empty column is created
-						if(board[selected][0] != -1)
+						if(height != 1)
 						{
 							free_spaces--;
 						}
@@ -247,10 +270,28 @@ int main()
 					//From board to board
 					if(selected < CASCADE_COUNT)
 					{
+						//Try to find a matching pair in the stack
+						top = stack_top(board[selected], CASCADE_DEPTH);
+						int selected_height = cascade_height(board[selected], CASCADE_DEPTH);
+						while(top != selected_height && !valid_pair(board[selected][top], board[cursor][height - 1]))
+						{
+							top++;
+						}
+
+						//Determine if a match was found
+						if(top != selected_height)
+						{
+							//Determine if a stack can be moved legally
+							if(selected_height - top <= free_spaces + 1)
+							{
+								//TODO
+								display_card(board[selected][top], UNSELECTED, CASCADE_COUNT, FREECELLS, 5);
+							}
+						}
 					}
 
 					//From freecell to board
-					else if(valid_pair(board[FREECELLS][selected - CASCADE_COUNT], board[cursor][height - 1]) || height == 0)
+					else if(valid_pair(board[FREECELLS][selected - CASCADE_COUNT], board[cursor][height - 1]))
 					{
 						//Move cursor up a space
 						height++;
@@ -268,8 +309,8 @@ int main()
 						//Unselect previous selection
 						selected = -1;
 
-						//Don't subtract from free_spaces if moving to empty column
-						if(board[cursor][1] != -1)
+						//Don't add to free_spaces if moving to empty column
+						if(height != 1)
 						{
 							free_spaces++;
 						}
@@ -284,10 +325,13 @@ int main()
 		//Try to send card to foundations
 		else if(ch == 104 && selected == -1)//h
 		{
-			int card;
+			int card = -1;
 			if(cursor < CASCADE_COUNT)
 			{
-				card = board[cursor][height - 1];
+				if(height != 0)
+				{
+					card = board[cursor][height - 1];
+				}
 			}
 			else
 			{
@@ -314,6 +358,12 @@ int main()
 					display_cursor(CASCADE_COUNT, cursor, height + 1, ' ');
 					display_cursor(CASCADE_COUNT, cursor, height, '*');
 					height--;
+
+					//Add to free_spaces if an empty column is created
+					if(height == 0)
+					{
+						free_spaces++;
+					}
 				}
 
 				//From freecell to foundation
@@ -332,13 +382,12 @@ int main()
 				//If all of the cards have been moved to the foundations
 				if(total == DECK_SIZE)
 				{
-					printf("WIN!\n");
+					end_screen();
 				}
 			}
 
 			update_screen();
 		}
-
 	}
 
 	//Exit game when q is pressed

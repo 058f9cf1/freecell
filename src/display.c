@@ -1,5 +1,10 @@
 #include <ncurses.h>
 
+
+#define TOP_GAP 10
+#define BOARD_PADDING 5
+
+
 #define BACKGROUND 1
 #define INFO 2
 #define HELP 3
@@ -28,7 +33,6 @@ int int_len(int n)
 		n = n / 10;
 		len++;
 	}
-
 	return len;
 }
 
@@ -99,7 +103,7 @@ void init_screen(int deal, int invert)
 	mvwprintw(help_box, 1, HELP_WIDTH / 2 - 4, "FREECELL");
 	mvwprintw(help_box, 2, HELP_WIDTH / 2 - 17, "Send all cards to the foundations!");
 	mvwprintw(help_box, 4, 1, "     [q] to quit");
-	mvwprintw(help_box, 5, 1, "   [1-8] to change columns");
+	mvwprintw(help_box, 5, 1, " [<- ->] to change columns");
 	mvwprintw(help_box, 6, 1, "  [asdf] to change to freecells");
 	mvwprintw(help_box, 7, 1, "     [h] to send to foundation");
 	mvwprintw(help_box, 8, 1, "[return] to select cascade/card");
@@ -153,17 +157,18 @@ void display_card(int card, int selected, int cascades, int x, int y)
 	//Display card at position on the screen
 	if(x < cascades)//Board
 	{
-		mvwprintw(table, y + 10, (x * 3 + 1) + cols / 2 - 12, "%c%c", rank, suit);
+		mvwprintw(table, y + TOP_GAP, x * 3 + (cols - cascades * 3) / 2 + 1, "%c%c", rank, suit);
+
 	}
 	else if(x == cascades)//Freecells
 	{
 		x -= cascades;
-		mvwprintw(table, y + 10, (x * 3 + 1) + cols / 2 - 22, "%c%c", rank, suit);
+		mvwprintw(table, y + TOP_GAP, (cols - cascades * 3) / 2 - 1 - BOARD_PADDING, "%c%c", rank, suit);
 	}
 	else if(x == cascades + 1)//Foundations
 	{
 		x -= cascades - 1;
-		mvwprintw(table, y + 10, (x * 3 + 1) + cols / 2 + 13, "%c%c", rank, suit);
+		mvwprintw(table, y + TOP_GAP, (cols + cascades * 3) / 2 + BOARD_PADDING, "%c%c", rank, suit);
 	}
 	wattroff(table, A_BOLD);
 	wattroff(table, COLOR_PAIR(UNSELECTED_BLACK_CARD));
@@ -177,12 +182,12 @@ void display_cursor(int cascades, int x, int y, char c)
 {
 	if(x < cascades)//Board
 	{
-		mvwprintw(table, y + 10, (x * 3 + 1) + cols / 2 - 12, "%c", c);
+		mvwprintw(table, y + TOP_GAP, x * 3 + (cols - cascades * 3) / 2 + 1, "%c", c);
 	}
 	else if(x >= cascades)//Freecells
 	{
 		x -= cascades;
-		mvwprintw(table, x + 10, cols / 2 - 18, "%c", c);
+		mvwprintw(table, x + TOP_GAP, (cols - cascades * 3) / 2 - 2 - BOARD_PADDING, "%c", c);
 	}
 }
 
@@ -209,6 +214,11 @@ void update_screen()
 	wrefresh(info_bar);
 }
 
+
+void end_screen()
+{
+	mvwprintw(table, TOP_GAP, cols / 2 - 2, "WIN!");
+}
 
 void exit_game()
 {
